@@ -3,6 +3,7 @@
 import gtk
 import gobject
 from time import time
+from datetime import datetime
 
 
 MINUTE_LENGTH = 6
@@ -26,6 +27,7 @@ class Controller:
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
 
     def main(self):
+        self.gui.call_rest_window(time() + self.timer.long_rest_length)
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
         self.gui.main()
 
@@ -41,7 +43,7 @@ class Timer:
         self.short_rest_time += MINUTE_LENGTH * 15
 
     def update_long_rest_time(self):
-        self.long_rest_time += MINUTE_LEGNTH * 60
+        self.long_rest_time += MINUTE_LENGTH * 60
 
     def get_short_rest_time(self):
         return self.short_rest_time
@@ -57,6 +59,7 @@ class GUI:
         self.tray_icon.set_tooltip('Meg')
         self.tray_icon.set_visible(True)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
+        # TODO: Add activate connection (change Controller to Singlton)
 
     def tray_icon_right_click(self, data, event_button, event_time):
         tray_icon_menu = gtk.Menu()
@@ -70,17 +73,24 @@ class GUI:
         rest_window = gtk.Window()
         rest_window.set_position(gtk.WIN_POS_CENTER)
         rest_window.set_border_width(10)
-        label = gtk.Label("Meg")
+        label = gtk.Label()
         rest_window.add(label)
         rest_window.show_all()
 
+        # TODO: Move this to Controller
         def update_window_state():
             if time() > rest_time:
                 rest_window.destroy()
                 return
             else:
-                gobject.timeout_add_seconds(UPDATE_INTERVAL, update_window_state)
-        gobject.timeout_add_seconds(UPDATE_INTERVAL, update_window_state)
+                delta = rest_time - time()
+                minutes = datetime.fromtimestamp(delta).minute
+                seconds = datetime.fromtimestamp(delta).second
+
+                label.set_text("Break time is " + str(minutes) + ":" + str(seconds))
+                gobject.timeout_add_seconds(1, update_window_state)
+
+        update_window_state()
 
     def main(self):
         gtk.main()
