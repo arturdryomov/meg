@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 
 import gtk
+import gobject
 from time import time
 
 
@@ -18,9 +19,11 @@ class Controller:
             elif time() > timer.get_short_rest_time():
                 gui.call_short_rest_window()
                 timer.update_short_rest_time()
+        gobject.timeout_add_seconds(30, self.update)
 
     def main(self):
         self.gui.main()
+        gobject.timeout_add_seconds(30, self.update)
 
 
 class Timer:
@@ -47,6 +50,16 @@ class GUI:
         self.tray_icon.set_from_stock(gtk.STOCK_ABOUT)
         self.tray_icon.set_tooltip('Meg')
         self.tray_icon.set_visible(True)
+        self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
+
+    def tray_icon_right_click(self, data, event_button, event_time):
+        tray_icon_menu = gtk.Menu()
+        close_menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
+        close_menu_item.connect_object("activate", lambda w: gtk.main_quit(), "Close")
+        tray_icon_menu.append(close_menu_item)
+        #close_menu_item.show()
+        map(lambda i: i.show(), tray_icon_menu)
+        tray_icon_menu.popup(None, None, None, event_button, event_time)
 
     def call_short_rest_window(self):
         pass
