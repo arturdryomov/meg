@@ -6,8 +6,8 @@ from time import time
 from datetime import datetime
 
 
-MINUTE_LENGTH = 6
-UPDATE_INTERVAL = 1
+MINUTE_LENGTH = 60
+UPDATE_INTERVAL = 10
 
 
 class Controller:
@@ -27,7 +27,6 @@ class Controller:
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
 
     def main(self):
-        self.gui.call_rest_window(time() + self.timer.long_rest_length)
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
         self.gui.main()
 
@@ -71,10 +70,24 @@ class GUI:
 
     def call_rest_window(self, rest_time):
         rest_window = gtk.Window()
+        rest_window.set_title("Meg")
+        rest_window.set_size_request(260, 150)
         rest_window.set_position(gtk.WIN_POS_CENTER)
-        rest_window.set_border_width(10)
-        label = gtk.Label()
-        rest_window.add(label)
+
+        text_label = gtk.Label("Give yourself a break!")
+        time_label = gtk.Label("Rest time is 00:00")
+        skip_button = gtk.Button("Skip")
+        skip_button.set_size_request(70, 30)
+        
+        skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
+        skip_button_align.add(skip_button)
+
+        rest_window_box = gtk.VBox(True, 5)
+        rest_window_box.pack_start(text_label)
+        rest_window_box.pack_start(time_label)
+        rest_window_box.pack_start(skip_button_align)
+
+        rest_window.add(rest_window_box)
         rest_window.show_all()
 
         # TODO: Move this to Controller
@@ -87,7 +100,7 @@ class GUI:
                 minutes = datetime.fromtimestamp(delta).minute
                 seconds = datetime.fromtimestamp(delta).second
 
-                label.set_text("Break time is " + str(minutes) + ":" + str(seconds))
+                time_label.set_text("Rest time is " + str(minutes) + ":" + str(seconds))
                 gobject.timeout_add_seconds(1, update_window_state)
 
         update_window_state()
