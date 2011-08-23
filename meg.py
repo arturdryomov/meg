@@ -16,7 +16,8 @@ class Controller():
         self.timer = Timer()
 
     def update(self):
-        if self.gui.get_state == "working":
+        if self.gui.get_state() == "working":
+            self.update_tray_icon_tooltip()
             if time() > self.timer.get_long_rest_time():
                 self.gui.call_rest_window()
                 self.timer.set_rest_time_ending(time() + self.timer.long_rest_length)
@@ -29,20 +30,31 @@ class Controller():
                 self.timer.update_short_rest_time()
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
 
+    def present_time(self, convertion_time):
+        minutes = datetime.fromtimestamp(convertion_time).minute
+        seconds = datetime.fromtimestamp(convertion_time).second
+        return str(minutes) + ":" + str(seconds)
+
     def update_rest_window(self):
         if time() > self.timer.get_rest_time_ending():
             self.gui.destroy_rest_window()
             return
         else:
             delta = self.timer.get_rest_time_ending() - time()
-            minutes = datetime.fromtimestamp(delta).minute
-            seconds = datetime.fromtimestamp(delta).second
-
-            self.gui.set_rest_window_timer("Rest time is " + str(minutes) + ":" + str(seconds))
+            self.gui.set_rest_window_timer("Rest time is " + self.present_time(delta))
             gobject.timeout_add_seconds(1, self.update_rest_window)
 
+    def update_tray_icon_tooltip(self):
+        long_breat_delta = self.timer.get_long_rest_time() - time()
+        short_break_delta = self.timer.get_short_rest_time() - time()
+        tooltip_text = "<b>Meg</b>"
+        tooltip_text += "\nTime for next breaks"
+        tooltip_text += "\nShort: " + self.present_time(short_break_delta)
+        tooltip_text += "\nLong: " + self.present_time(long_breat_delta)
+        self.gui.update_tray_icon_tooltip(tooltip_text)
+
     def main(self):
-        gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
+        self.update()
         self.gui.main()
 
 
@@ -77,8 +89,8 @@ class GUI:
     def __init__(self):
         self.state = "working"
         self.tray_icon = gtk.StatusIcon()
-        self.tray_icon.set_from_stock(gtk.STOCK_ABOUT)
-        self.tray_icon.set_tooltip('Meg')
+        self.tray_icon.set_from_stock(gtk.STOCK_YES)
+        self.tray_icon.set_tooltip_markup("<b>Meg</b>")
         self.tray_icon.set_visible(True)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
         self.tray_icon.connect("activate", self.update_state)
@@ -89,8 +101,12 @@ class GUI:
     def update_state(self, dummy=None):
         if self.state == "working":
             self.state = "idle"
+            self.update_tray_icon_tooltip("Meg is idle")
+            self.tray_icon.set_from_stock(gtk.STOCK_NO)
         else:
             self.state = "working"
+            self.update_tray_icon_tooltip("Meg is working")
+            self.tray_icon.set_from_stock(gtk.STOCK_YES)
 
     def tray_icon_right_click(self, data, event_button, event_time):
         tray_icon_menu = gtk.Menu()
@@ -99,6 +115,9 @@ class GUI:
         tray_icon_menu.append(close_menu_item)
         map(lambda i: i.show(), tray_icon_menu)
         tray_icon_menu.popup(None, None, None, event_button, event_time)
+
+    def update_tray_icon_tooltip(self, tooltip_text):
+        self.tray_icon.set_tooltip_markup(tooltip_text)
 
     def call_rest_window(self):
         self.rest_window = gtk.Window()
