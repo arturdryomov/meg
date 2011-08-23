@@ -19,12 +19,26 @@ class Controller:
     def update(self):
         if self.state == "working":
             if time() > self.timer.get_long_rest_time():
-                self.gui.call_rest_window(time() + self.timer.long_rest_length)
+                self.gui.call_rest_window()
+                self.timer.set_rest_time_ending(time() + self.timer.long_rest_length)
+                self.update_rest_window()
                 self.timer.update_long_rest_time()
             elif time() > self.timer.get_short_rest_time():
                 self.gui.call_rest_window(time() + self.timer.short_rest_length)
                 self.timer.update_short_rest_time()
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
+
+    def update_rest_window(self):
+        if time() > self.timer.get_rest_time_ending():
+            self.gui.destroy_rest_window()
+            return
+        else:
+            delta = self.timer.get_rest_time_ending() - time()
+            minutes = datetime.fromtimestamp(delta).minute
+            seconds = datetime.fromtimestamp(delta).second
+
+            self.gui.set_rest_window_timer("Rest time is " + str(minutes) + ":" + str(seconds))
+            gobject.timeout_add_seconds(1, self.update_rest_window)
 
     def main(self):
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
@@ -37,6 +51,7 @@ class Timer:
         self.long_rest_length = MINUTE_LENGTH * 5
         self.short_rest_time = time() + MINUTE_LENGTH * 15
         self.long_rest_time = time() + MINUTE_LENGTH * 60
+        self.rest_time_ending = time()
     
     def update_short_rest_time(self):
         self.short_rest_time += MINUTE_LENGTH * 15
@@ -49,6 +64,12 @@ class Timer:
 
     def get_long_rest_time(self):
         return self.long_rest_time
+
+    def set_rest_time_ending(self, rest_time):
+        self.rest_time_ending = rest_time
+
+    def get_rest_time_ending(self):
+        return self.rest_time_ending
 
 
 class GUI:
@@ -68,15 +89,16 @@ class GUI:
         map(lambda i: i.show(), tray_icon_menu)
         tray_icon_menu.popup(None, None, None, event_button, event_time)
 
-    def call_rest_window(self, rest_time):
-        rest_window = gtk.Window()
-        rest_window.set_title("Meg")
-        rest_window.set_size_request(260, 150)
-        rest_window.set_position(gtk.WIN_POS_CENTER)
+    def call_rest_window(self):
+        self.rest_window = gtk.Window()
+        self.rest_window.set_title("Meg")
+        self.rest_window.set_size_request(260, 150)
+        self.rest_window.set_position(gtk.WIN_POS_CENTER)
 
         text_label = gtk.Label("Give yourself a break!")
-        time_label = gtk.Label("Rest time is 00:00")
+        self.time_label = gtk.Label("Rest time is 00:00")
         skip_button = gtk.Button("Skip")
+        # TODO: Connect skip button with skip action
         skip_button.set_size_request(70, 30)
         
         skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
@@ -84,26 +106,17 @@ class GUI:
 
         rest_window_box = gtk.VBox(True, 5)
         rest_window_box.pack_start(text_label)
-        rest_window_box.pack_start(time_label)
+        rest_window_box.pack_start(self.time_label)
         rest_window_box.pack_start(skip_button_align)
 
-        rest_window.add(rest_window_box)
-        rest_window.show_all()
+        self.rest_window.add(rest_window_box)
+        self.rest_window.show_all()
 
-        # TODO: Move this to Controller
-        def update_window_state():
-            if time() > rest_time:
-                rest_window.destroy()
-                return
-            else:
-                delta = rest_time - time()
-                minutes = datetime.fromtimestamp(delta).minute
-                seconds = datetime.fromtimestamp(delta).second
+    def set_rest_window_timer(self, timer_text):
+        self.time_label.set_text(timer_text)
 
-                time_label.set_text("Rest time is " + str(minutes) + ":" + str(seconds))
-                gobject.timeout_add_seconds(1, update_window_state)
-
-        update_window_state()
+    def destroy_rest_window(self):
+        self.rest_window.destroy()
 
     def main(self):
         gtk.main()
