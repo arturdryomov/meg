@@ -86,7 +86,7 @@ class GUI:
     def get_state(self):
         return self.state
 
-    def update_state(self, dummy):
+    def update_state(self, dummy=None):
         if self.state == "working":
             self.state = "idle"
         else:
@@ -109,7 +109,7 @@ class GUI:
         text_label = gtk.Label("Give yourself a break!")
         self.time_label = gtk.Label("Rest time is 00:00")
         skip_button = gtk.Button("Skip")
-        # TODO: Connect skip button with skip action
+        skip_button.connect("clicked", self.destroy_rest_window)
         skip_button.set_size_request(70, 30)
         
         skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
@@ -126,7 +126,7 @@ class GUI:
     def set_rest_window_timer(self, timer_text):
         self.time_label.set_text(timer_text)
 
-    def destroy_rest_window(self):
+    def destroy_rest_window(self, dummy=None):
         self.rest_window.destroy()
 
     def main(self):
