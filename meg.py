@@ -10,21 +10,22 @@ MINUTE_LENGTH = 60
 UPDATE_INTERVAL = 10
 
 
-class Controller:
+class Controller():
     def __init__(self):
-        self.state = "working"
         self.gui = GUI()
         self.timer = Timer()
 
     def update(self):
-        if self.state == "working":
+        if self.gui.get_state == "working":
             if time() > self.timer.get_long_rest_time():
                 self.gui.call_rest_window()
                 self.timer.set_rest_time_ending(time() + self.timer.long_rest_length)
                 self.update_rest_window()
                 self.timer.update_long_rest_time()
             elif time() > self.timer.get_short_rest_time():
-                self.gui.call_rest_window(time() + self.timer.short_rest_length)
+                self.gui.call_rest_window()
+                self.timer.set_rest_time_ending(time() + self.timer.short_rest_length)
+                self.update_rest_window()
                 self.timer.update_short_rest_time()
         gobject.timeout_add_seconds(UPDATE_INTERVAL, self.update)
 
@@ -74,12 +75,22 @@ class Timer:
 
 class GUI:
     def __init__(self):
+        self.state = "working"
         self.tray_icon = gtk.StatusIcon()
         self.tray_icon.set_from_stock(gtk.STOCK_ABOUT)
         self.tray_icon.set_tooltip('Meg')
         self.tray_icon.set_visible(True)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
-        # TODO: Add activate connection (change Controller to Singlton)
+        self.tray_icon.connect("activate", self.update_state)
+
+    def get_state(self):
+        return self.state
+
+    def update_state(self, dummy):
+        if self.state == "working":
+            self.state = "idle"
+        else:
+            self.state = "working"
 
     def tray_icon_right_click(self, data, event_button, event_time):
         tray_icon_menu = gtk.Menu()
