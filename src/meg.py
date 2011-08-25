@@ -4,8 +4,10 @@
 
 import gtk
 import gobject
-from time import time
+
 from datetime import datetime
+from time import time
+from os.path import dirname, join, realpath
 
 
 class Controller():
@@ -87,7 +89,7 @@ class Timer:
         # For easy debugging
         self.minute_length = 60
 
-        self.short_rest_length = self.minute_length * 1
+        self.short_rest_length = self.minute_length * 0.5
         self.long_rest_length = self.minute_length * 5
         self.short_rest_time = time() + self.minute_length * 15
         self.long_rest_time = time() + self.minute_length * 60
@@ -124,10 +126,8 @@ class GUI:
 
     def __init__(self):
         """ Initialization, sets tray icon up """
-        self.state = "working"
+        self.state = "idle"
         self.tray_icon = gtk.StatusIcon()
-        self.tray_icon.set_from_stock(gtk.STOCK_YES)
-        self.tray_icon.set_tooltip_markup("<b>Meg</b>")
         self.tray_icon.set_visible(True)
         # Signals connection
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
@@ -141,12 +141,13 @@ class GUI:
         """ Updates state of GUI inversionally """
         if self.state == "working":
             self.state = "idle"
-            self.update_tray_icon_tooltip("Meg is idle")
-            self.tray_icon.set_from_stock(gtk.STOCK_NO)
+            self.update_tray_icon_tooltip("<b>Meg</b> is idle")
         else:
             self.state = "working"
-            self.update_tray_icon_tooltip("Meg is working")
-            self.tray_icon.set_from_stock(gtk.STOCK_YES)
+            self.update_tray_icon_tooltip("<b>Meg</b> is working")
+        # Not forget to change icon
+        self.tray_icon.set_from_file(join(dirname(realpath(__file__)),
+            "..", "icons", self.state + ".svg"))
 
     def tray_icon_right_click(self, data, event_button, event_time):
         """ Signal nandler for right click """
@@ -198,6 +199,7 @@ class GUI:
 
     def main(self):
         """ Main circle, contains gtk.main() control """
+        self.update_state()
         gtk.main()
 
 
