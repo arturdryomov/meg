@@ -33,6 +33,6 @@ lenght of break is 30 seconds) and long (reminds you every 1 hour,
 length — 5 minutes). If you want to know when it would be break, just point 
 cursor on Meg icon.
 
-Rest window has timer of break and «Skip» button. If you press it (or close 
+Rest window has timer of break and “Skip” button. If you press it (or close 
 the window) you’re going to meet RoboDevil! I’m joking, Meg just would 
 think that you successfully had this rest (but your conscience would be guilty).

@@ -73,6 +73,13 @@ class Controller():
 
     def main(self):
         """ Main start working method """
+
+        self.gui.call_rest_window()
+        self.timer.set_rest_time_ending(time() +
+            self.timer.long_rest_length)
+        self.update_rest_window()
+        self.timer.update_long_rest_time()
+
         self.update()
         self.gui.main()
 
@@ -170,6 +177,10 @@ class GUI:
         self.rest_window.set_title("Meg")
         self.rest_window.set_size_request(260, 150)
         self.rest_window.set_position(gtk.WIN_POS_CENTER)
+        self.rest_window.set_skip_pager_hint(True)
+        self.rest_window.set_resizable(False)
+        self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
+            "..", "icons", "working.svg"))
 
         text_label = gtk.Label("Give yourself a break!")
         self.time_label = gtk.Label("Rest time is 00:00")
