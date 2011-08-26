@@ -73,13 +73,6 @@ class Controller():
 
     def main(self):
         """ Main start working method """
-
-        self.gui.call_rest_window()
-        self.timer.set_rest_time_ending(time() +
-            self.timer.long_rest_length)
-        self.update_rest_window()
-        self.timer.update_long_rest_time()
-
         self.update()
         self.gui.main()
 
