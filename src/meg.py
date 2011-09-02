@@ -38,41 +38,41 @@ class Controller():
                 self.timer.update_short_rest_time()
         else:
             # Reinit timer data for currect timing after idle state
-            self.timer.init_timer()
+            self.timer.reinit_timer()
         # Check in circle
         gobject.timeout_add_seconds(5, self.update)
 
+    def update_tray_icon_tooltip(self):
+        """ Updating tooltip with time for next breaks """
+        long_break_delta = self.timer.get_long_rest_time() - time()
+        short_break_delta = self.timer.get_short_rest_time() - time()
+        # Used Pango Markup
+        tooltip_text = "<b>Meg</b>"
+        tooltip_text += "\nTime for next breaks"
+        tooltip_text += "\nShort: " + self.present_time(short_break_delta)
+        tooltip_text += "\nLong: " + self.present_time(long_break_delta)
+        self.gui.update_tray_icon_tooltip(tooltip_text)
+
     def update_rest_window(self):
-        """ Circle of updating rest window, which includes timer widget """
+        """ Circle of updating rest window timer """
         if time() > self.timer.get_rest_time_ending():
             self.gui.destroy_rest_window()
-            return
         else:
             delta = self.timer.get_rest_time_ending() - time()
             self.gui.set_rest_window_timer("Rest time is "
                 + self.present_time(delta))
             gobject.timeout_add_seconds(1, self.update_rest_window)
 
-    def update_tray_icon_tooltip(self):
-        """ Updating tooltip with timer for next breaks """
-        long_breat_delta = self.timer.get_long_rest_time() - time()
-        short_break_delta = self.timer.get_short_rest_time() - time()
-        # Used Pango Markup
-        tooltip_text = "<b>Meg</b>"
-        tooltip_text += "\nTime for next breaks"
-        tooltip_text += "\nShort: " + self.present_time(short_break_delta)
-        tooltip_text += "\nLong: " + self.present_time(long_breat_delta)
-        self.gui.update_tray_icon_tooltip(tooltip_text)
-
     def present_time(self, convertion_time):
         """ Converts time presented as double to string
             in format MM:SS """
+        # There are no hours or whatever, just don't need it
         minutes = datetime.fromtimestamp(convertion_time).minute
         seconds = datetime.fromtimestamp(convertion_time).second
         return str(minutes) + ":" + str(seconds)
 
     def main(self):
-        """ Main start working method """
+        """ Main method, starts work """
         self.update()
         self.gui.main()
 
@@ -81,11 +81,7 @@ class Timer:
     """ Time manipulating class """
 
     def __init__(self):
-        """ Initialization override """
-        self.init_timer()
-
-    def init_timer(self):
-        """ Main initialization function for rest length and stuff """
+        """ Main initialization function for rest lengths and stuff """
         # For easy debugging
         self.minute_length = 60
 
@@ -95,12 +91,17 @@ class Timer:
         self.long_rest_time = time() + self.minute_length * 60
         self.rest_time_ending = time()
 
+    def reinit_timer(self):
+        """ Reinit timer values """
+        self.__init__()
+
     def update_short_rest_time(self):
         """ Updates short rest time for next rest """
         self.short_rest_time += self.minute_length * 15
 
     def update_long_rest_time(self):
         """ Updates long rest time for next rest """
+        # Don't forget update short rest, they coincides with each other
         self.short_rest_time += self.minute_length * 15
         self.long_rest_time += self.minute_length * 60
 
@@ -133,13 +134,43 @@ class GUI:
     """ Windows and other shiny icons class """
 
     def __init__(self):
-        """ Initialization, sets tray icon up """
+        """ Initialization of the interface """
         self.state = "idle"
         self.tray_icon = gtk.StatusIcon()
+        # Timer widget is here, because it's updating is external
+        self.time_label = gtk.Label()
+        self.rest_window = gtk.Window()
+        self.initialize_rest_window()
         self.tray_icon.set_visible(True)
         # Signals connection
-        self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
         self.tray_icon.connect("activate", self.update_state)
+        self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
+
+    def initialize_rest_window(self):
+        """ Creates rest window """
+        self.rest_window.set_title("Meg")
+        self.rest_window.set_size_request(260, 150)
+        self.rest_window.set_position(gtk.WIN_POS_CENTER)
+        self.rest_window.set_skip_pager_hint(True)
+        self.rest_window.set_resizable(False)
+        self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
+            "..", "icons", "working.svg"))
+
+        text_label = gtk.Label("Give yourself a break!")
+        skip_button = gtk.Button("Skip")
+        skip_button.connect("clicked", self.destroy_rest_window)
+        skip_button.set_size_request(70, 30)
+
+        # Put button at center
+        skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
+        skip_button_align.add(skip_button)
+
+        rest_window_box = gtk.VBox(True, 5)
+        rest_window_box.pack_start(text_label)
+        rest_window_box.pack_start(self.time_label)
+        rest_window_box.pack_start(skip_button_align)
+
+        self.rest_window.add(rest_window_box)
 
     def get_state(self):
         """ Returs current state of GUI """
@@ -172,33 +203,9 @@ class GUI:
         """ Updates icon tooltip with tooltip_text in Markup format """
         self.tray_icon.set_tooltip_markup(tooltip_text)
 
+
     def call_rest_window(self):
-        """ Creates and calls rest window """
-        self.rest_window = gtk.Window()
-        self.rest_window.set_title("Meg")
-        self.rest_window.set_size_request(260, 150)
-        self.rest_window.set_position(gtk.WIN_POS_CENTER)
-        self.rest_window.set_skip_pager_hint(True)
-        self.rest_window.set_resizable(False)
-        self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
-            "..", "icons", "working.svg"))
-
-        text_label = gtk.Label("Give yourself a break!")
-        self.time_label = gtk.Label("Rest time is 00:00")
-        skip_button = gtk.Button("Skip")
-        skip_button.connect("clicked", self.destroy_rest_window)
-        skip_button.set_size_request(70, 30)
-
-        # For putting button on center
-        skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
-        skip_button_align.add(skip_button)
-
-        rest_window_box = gtk.VBox(True, 5)
-        rest_window_box.pack_start(text_label)
-        rest_window_box.pack_start(self.time_label)
-        rest_window_box.pack_start(skip_button_align)
-
-        self.rest_window.add(rest_window_box)
+        """ Calls rest window """
         self.rest_window.show_all()
 
     def set_rest_window_timer(self, timer_text):
