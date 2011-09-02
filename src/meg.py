@@ -27,13 +27,13 @@ class Controller():
             if time() > self.timer.get_long_rest_time():
                 self.gui.call_rest_window()
                 self.timer.set_rest_time_ending(time() +
-                    self.timer.long_rest_length)
+                    self.timer.get_long_rest_length())
                 self.update_rest_window()
                 self.timer.update_long_rest_time()
             elif time() > self.timer.get_short_rest_time():
                 self.gui.call_rest_window()
                 self.timer.set_rest_time_ending(time() +
-                    self.timer.short_rest_length)
+                    self.timer.get_short_rest_length())
                 self.update_rest_window()
                 self.timer.update_short_rest_time()
         else:
@@ -107,6 +107,14 @@ class Timer:
     def get_short_rest_time(self):
         """ Returns short rest time in double format """
         return self.short_rest_time
+
+    def get_long_rest_length(self):
+        """ Returns long rest length in double format """
+        return self.long_rest_length
+
+    def get_short_rest_length(self):
+        """ Returns short rest length in double format """
+        return self.short_rest_length
 
     def get_long_rest_time(self):
         """ Returns long rest time in double format """
