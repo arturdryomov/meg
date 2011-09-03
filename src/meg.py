@@ -137,40 +137,13 @@ class GUI:
         """ Initialization of the interface """
         self.state = "idle"
         self.tray_icon = gtk.StatusIcon()
+        self.rest_window = gtk.Window()
         # Timer widget is here, because it's updating is external
         self.time_label = gtk.Label()
-        self.rest_window = gtk.Window()
-        self.initialize_rest_window()
         self.tray_icon.set_visible(True)
         # Signals connection
         self.tray_icon.connect("activate", self.update_state)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
-
-    def initialize_rest_window(self):
-        """ Creates rest window """
-        self.rest_window.set_title("Meg")
-        self.rest_window.set_size_request(260, 150)
-        self.rest_window.set_position(gtk.WIN_POS_CENTER)
-        self.rest_window.set_skip_pager_hint(True)
-        self.rest_window.set_resizable(False)
-        self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
-            "..", "icons", "working.svg"))
-
-        text_label = gtk.Label("Give yourself a break!")
-        skip_button = gtk.Button("Skip")
-        skip_button.connect("clicked", self.destroy_rest_window)
-        skip_button.set_size_request(70, 30)
-
-        # Put button at center
-        skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
-        skip_button_align.add(skip_button)
-
-        rest_window_box = gtk.VBox(True, 5)
-        rest_window_box.pack_start(text_label)
-        rest_window_box.pack_start(self.time_label)
-        rest_window_box.pack_start(skip_button_align)
-
-        self.rest_window.add(rest_window_box)
 
     def get_state(self):
         """ Returs current state of GUI """
@@ -205,7 +178,30 @@ class GUI:
 
 
     def call_rest_window(self):
-        """ Calls rest window """
+        """ Creates and calls rest window """
+        self.rest_window.set_title("Meg")
+        self.rest_window.set_size_request(260, 150)
+        self.rest_window.set_position(gtk.WIN_POS_CENTER)
+        self.rest_window.set_skip_pager_hint(True)
+        self.rest_window.set_resizable(False)
+        self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
+            "..", "icons", "working.svg"))
+
+        text_label = gtk.Label("Give yourself a break!")
+        skip_button = gtk.Button("Skip")
+        skip_button.connect("clicked", self.destroy_rest_window)
+        skip_button.set_size_request(70, 30)
+
+        # Put button at center
+        skip_button_align = gtk.Alignment(0.5, 0.5, 0, 0)
+        skip_button_align.add(skip_button)
+
+        rest_window_box = gtk.VBox(True, 5)
+        rest_window_box.pack_start(text_label)
+        rest_window_box.pack_start(self.time_label)
+        rest_window_box.pack_start(skip_button_align)
+
+        self.rest_window.add(rest_window_box)
         self.rest_window.show_all()
 
     def set_rest_window_timer(self, timer_text):
