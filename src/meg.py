@@ -24,51 +24,52 @@ class Controller():
 
     def update(self):
         """ Circle of updating, meanwhile controls rest window
-            and timer updating """
+            and timer update """
 
-        if self.gui.get_state() == "working":
+        if self.gui.state == "working":
+            # Update tooltip anyway
             self.update_tray_icon_tooltip()
+
             # Handle long rest first
-            if time() > self.timer.get_long_rest_time():
+            if time() > self.timer.long_rest_time:
                 self.gui.call_rest_window()
-                self.timer.set_rest_time_ending(time() +
-                    self.timer.get_long_rest_length())
+
+                self.timer.rest_time_ending = time() +
+                    self.timer.long_rest_length()
+
                 self.update_rest_window()
+
                 self.timer.update_long_rest_time()
-            elif time() > self.timer.get_short_rest_time():
+
+            elif time() > self.timer.short_rest_time:
                 self.gui.call_rest_window()
-                self.timer.set_rest_time_ending(time() +
-                    self.timer.get_short_rest_length())
+
+                self.timer.rest_time_ending = time() +
+                    self.timer.short_rest_length()
+
                 self.update_rest_window()
+
                 self.timer.update_short_rest_time()
         else:
             # Reinit timer data for currect timing after idle state
             self.timer.reinit_timer()
+
         # Check in circle
         gobject.timeout_add_seconds(5, self.update)
 
     def update_tray_icon_tooltip(self):
         """ Update tooltip with time for next breaks """
 
-        long_break_delta = self.timer.get_long_rest_time() - time()
-        short_break_delta = self.timer.get_short_rest_time() - time()
-        # Used Pango Markup
+        long_break_delta = self.timer.long_rest_time() - time()
+        short_break_delta = self.timer.short_rest_time() - time()
+
+        # Pango Markup is using for formatting
         tooltip_text = "<b>Meg</b>"
         tooltip_text += "\nTime for next breaks"
         tooltip_text += "\nShort: " + self.present_time(short_break_delta)
         tooltip_text += "\nLong: " + self.present_time(long_break_delta)
+
         self.gui.update_tray_icon_tooltip(tooltip_text)
-
-    def update_rest_window(self):
-        """ Circle of updating rest window timer """
-
-        if time() > self.timer.get_rest_time_ending():
-            self.gui.destroy_rest_window()
-        else:
-            delta = self.timer.get_rest_time_ending() - time()
-            self.gui.set_rest_window_timer("Rest time is "
-                + self.present_time(delta))
-            gobject.timeout_add_seconds(1, self.update_rest_window)
 
     def present_time(self, convertion_time):
         """ Converts time presented as double to string
@@ -79,6 +80,20 @@ class Controller():
         minutes = datetime.fromtimestamp(convertion_time).minute
         seconds = datetime.fromtimestamp(convertion_time).second
         return str(minutes) + ":" + str(seconds)
+
+    def update_rest_window(self):
+        """ Circle of updating rest window timer """
+
+        if time() > self.timer.rest_time_ending():
+            self.gui.destroy_rest_window()
+        else:
+            delta = self.timer.rest_time_ending() - time()
+
+            self.gui.set_rest_window_timer("Rest time is "
+                + self.present_time(delta))
+
+            # Update rest window timer once a second
+            gobject.timeout_add_seconds(1, self.update_rest_window)
 
     def main(self):
         """ Main method, starts work """
@@ -119,37 +134,6 @@ class Timer:
         self.short_rest_time += self.minute_length * 15
         self.long_rest_time += self.minute_length * 60
 
-    # TODO: Try to change to getters and setters 
-    def get_short_rest_time(self):
-        """ Returns short rest time in double format """
-
-        return self.short_rest_time
-
-    def get_long_rest_length(self):
-        """ Returns long rest length in double format """
-
-        return self.long_rest_length
-
-    def get_short_rest_length(self):
-        """ Returns short rest length in double format """
-
-        return self.short_rest_length
-
-    def get_long_rest_time(self):
-        """ Returns long rest time in double format """
-
-        return self.long_rest_time
-
-    def set_rest_time_ending(self, rest_time):
-        """ Sets rest time ending with given rest_time """
-
-        self.rest_time_ending = rest_time
-
-    def get_rest_time_ending(self):
-        """ Returns rest time ending in double format """
-
-        return self.rest_time_ending
-
 
 class GUI:
     """ Windows and other shiny icons class """
@@ -166,11 +150,6 @@ class GUI:
         # Signals connection
         self.tray_icon.connect("activate", self.update_state)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
-
-    def get_state(self):
-        """ Returs current state of GUI """
-
-        return self.state
 
     def update_state(self, dummy=None):
         """ Updates state of GUI inversionally """
