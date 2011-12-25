@@ -13,6 +13,8 @@ from time import time
 from os.path import dirname, join, realpath
 
 
+# TODO: Break to separate modules
+
 class Controller():
     """ Controls all classes and work process """
 
@@ -34,8 +36,8 @@ class Controller():
             if time() > self.timer.long_rest_time:
                 self.gui.call_rest_window()
 
-                self.timer.rest_time_ending = time() +
-                    self.timer.long_rest_length()
+                self.timer.rest_time_ending = (time() +
+                    self.timer.long_rest_length)
 
                 self.update_rest_window()
 
@@ -44,8 +46,8 @@ class Controller():
             elif time() > self.timer.short_rest_time:
                 self.gui.call_rest_window()
 
-                self.timer.rest_time_ending = time() +
-                    self.timer.short_rest_length()
+                self.timer.rest_time_ending = (time() +
+                    self.timer.short_rest_length)
 
                 self.update_rest_window()
 
@@ -60,8 +62,8 @@ class Controller():
     def update_tray_icon_tooltip(self):
         """ Update tooltip with time for next breaks """
 
-        long_break_delta = self.timer.long_rest_time() - time()
-        short_break_delta = self.timer.short_rest_time() - time()
+        long_break_delta = self.timer.long_rest_time - time()
+        short_break_delta = self.timer.short_rest_time - time()
 
         # Pango Markup is using for formatting
         tooltip_text = "<b>Meg</b>"
@@ -84,10 +86,10 @@ class Controller():
     def update_rest_window(self):
         """ Circle of updating rest window timer """
 
-        if time() > self.timer.rest_time_ending():
+        if time() > self.timer.rest_time_ending:
             self.gui.destroy_rest_window()
         else:
-            delta = self.timer.rest_time_ending() - time()
+            delta = self.timer.rest_time_ending - time()
 
             self.gui.set_rest_window_timer("Rest time is "
                 + self.present_time(delta))
@@ -108,7 +110,7 @@ class Timer:
     def __init__(self):
         """ Main initialization function for rest lengths and stuff """
 
-        # For easy debugging
+        # For easy debugging and other planets
         self.minute_length = 60
 
         self.short_rest_length = self.minute_length * 0.5
@@ -158,11 +160,12 @@ class GUI:
 
         if self.state == "working":
             self.state = "idle"
-            self.update_tray_icon_tooltip("<b>Meg</b> is idle")
         else:
             self.state = "working"
-            self.update_tray_icon_tooltip("<b>Meg</b> is working")
-        # Not forget to change icon
+
+        self.update_tray_icon_tooltip("<b>Meg</b> is " + self.state)
+
+        # Do not forget to change icon
         self.tray_icon.set_from_file(join(dirname(realpath(__file__)),
             "..", "icons", self.state + ".svg"))
 
@@ -174,6 +177,7 @@ class GUI:
         close_menu_item.connect_object("activate",
             lambda w: gtk.main_quit(), "Close")
         tray_icon_menu.append(close_menu_item)
+
         # Go threw all menu items and show them
         map(lambda i: i.show(), tray_icon_menu)
         tray_icon_menu.popup(None, None, None, event_button, event_time)
@@ -183,10 +187,10 @@ class GUI:
 
         self.tray_icon.set_tooltip_markup(tooltip_text)
 
-
     def call_rest_window(self):
         """ Creates and calls rest window """
 
+        # TODO: Set some way priority of window
         self.rest_window.set_title("Meg")
         self.rest_window.set_size_request(260, 150)
         self.rest_window.set_position(gtk.WIN_POS_CENTER)
@@ -229,7 +233,7 @@ class GUI:
         gtk.main()
 
 
-# Create application instance and show it
+# Create application instance and run it
 if __name__ == "__main__":
     app = Controller()
     app.main()
