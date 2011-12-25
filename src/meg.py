@@ -72,14 +72,14 @@ class Controller():
         self.gui.update_tray_icon_tooltip(tooltip_text)
 
     def present_time(self, convertion_time):
-        """ Converts time presented as double to string
+        """ Converts time presented as time to string
             in format MM:SS """
 
-        # TODO: Keep zeros in time
         # There are no hours or whatever, just don't need it
         minutes = datetime.fromtimestamp(convertion_time).minute
         seconds = datetime.fromtimestamp(convertion_time).second
-        return str(minutes) + ":" + str(seconds)
+
+        return "{0:02d}:{1:02d}".format(minutes, seconds)
 
     def update_rest_window(self):
         """ Circle of updating rest window timer """
@@ -92,7 +92,7 @@ class Controller():
             self.gui.set_rest_window_timer("Rest time is "
                 + self.present_time(delta))
 
-            # Update rest window timer once a second
+            # Update rest window timer (call yourself) once a second
             gobject.timeout_add_seconds(1, self.update_rest_window)
 
     def main(self):
@@ -112,9 +112,11 @@ class Timer:
         self.minute_length = 60
 
         self.short_rest_length = self.minute_length * 0.5
-        self.long_rest_length = self.minute_length * 5
+        self.long_rest_length = self.minute_length * 3
+
         self.short_rest_time = time() + self.minute_length * 15
         self.long_rest_time = time() + self.minute_length * 60
+
         self.rest_time_ending = time()
 
     def reinit_timer(self):
@@ -130,7 +132,7 @@ class Timer:
     def update_long_rest_time(self):
         """ Updates long rest time for next rest """
 
-        # Don't forget update short rest, they coincides with each other
+        # Don't forget update short rest, it coincides with long rest time
         self.short_rest_time += self.minute_length * 15
         self.long_rest_time += self.minute_length * 60
 
