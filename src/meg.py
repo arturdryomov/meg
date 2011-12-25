@@ -1,6 +1,9 @@
 #!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+
 
 """ Provides notifications about having break from working """
+
 
 import gtk
 import gobject
@@ -11,16 +14,18 @@ from os.path import dirname, join, realpath
 
 
 class Controller():
-    """ Controls work of all classes and work process """
+    """ Controls all classes and work process """
 
     def __init__(self):
         """ Initialization of own GUI and Timer """
+
         self.gui = GUI()
         self.timer = Timer()
 
     def update(self):
         """ Circle of updating, meanwhile controls rest window
             and timer updating """
+
         if self.gui.get_state() == "working":
             self.update_tray_icon_tooltip()
             # Handle long rest first
@@ -43,7 +48,8 @@ class Controller():
         gobject.timeout_add_seconds(5, self.update)
 
     def update_tray_icon_tooltip(self):
-        """ Updating tooltip with time for next breaks """
+        """ Update tooltip with time for next breaks """
+
         long_break_delta = self.timer.get_long_rest_time() - time()
         short_break_delta = self.timer.get_short_rest_time() - time()
         # Used Pango Markup
@@ -55,6 +61,7 @@ class Controller():
 
     def update_rest_window(self):
         """ Circle of updating rest window timer """
+
         if time() > self.timer.get_rest_time_ending():
             self.gui.destroy_rest_window()
         else:
@@ -66,6 +73,8 @@ class Controller():
     def present_time(self, convertion_time):
         """ Converts time presented as double to string
             in format MM:SS """
+
+        # TODO: Keep zeros in time
         # There are no hours or whatever, just don't need it
         minutes = datetime.fromtimestamp(convertion_time).minute
         seconds = datetime.fromtimestamp(convertion_time).second
@@ -73,6 +82,7 @@ class Controller():
 
     def main(self):
         """ Main method, starts work """
+
         self.update()
         self.gui.main()
 
@@ -82,6 +92,7 @@ class Timer:
 
     def __init__(self):
         """ Main initialization function for rest lengths and stuff """
+
         # For easy debugging
         self.minute_length = 60
 
@@ -93,40 +104,50 @@ class Timer:
 
     def reinit_timer(self):
         """ Reinit timer values """
+
         self.__init__()
 
     def update_short_rest_time(self):
         """ Updates short rest time for next rest """
+
         self.short_rest_time += self.minute_length * 15
 
     def update_long_rest_time(self):
         """ Updates long rest time for next rest """
+
         # Don't forget update short rest, they coincides with each other
         self.short_rest_time += self.minute_length * 15
         self.long_rest_time += self.minute_length * 60
 
+    # TODO: Try to change to getters and setters 
     def get_short_rest_time(self):
         """ Returns short rest time in double format """
+
         return self.short_rest_time
 
     def get_long_rest_length(self):
         """ Returns long rest length in double format """
+
         return self.long_rest_length
 
     def get_short_rest_length(self):
         """ Returns short rest length in double format """
+
         return self.short_rest_length
 
     def get_long_rest_time(self):
         """ Returns long rest time in double format """
+
         return self.long_rest_time
 
     def set_rest_time_ending(self, rest_time):
         """ Sets rest time ending with given rest_time """
+
         self.rest_time_ending = rest_time
 
     def get_rest_time_ending(self):
         """ Returns rest time ending in double format """
+
         return self.rest_time_ending
 
 
@@ -135,6 +156,7 @@ class GUI:
 
     def __init__(self):
         """ Initialization of the interface """
+
         self.state = "idle"
         self.tray_icon = gtk.StatusIcon()
         self.rest_window = gtk.Window()
@@ -147,10 +169,12 @@ class GUI:
 
     def get_state(self):
         """ Returs current state of GUI """
+
         return self.state
 
     def update_state(self, dummy=None):
         """ Updates state of GUI inversionally """
+
         if self.state == "working":
             self.state = "idle"
             self.update_tray_icon_tooltip("<b>Meg</b> is idle")
@@ -163,6 +187,7 @@ class GUI:
 
     def tray_icon_right_click(self, data, event_button, event_time):
         """ Signal nandler for right click """
+
         tray_icon_menu = gtk.Menu()
         close_menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         close_menu_item.connect_object("activate",
@@ -174,11 +199,13 @@ class GUI:
 
     def update_tray_icon_tooltip(self, tooltip_text):
         """ Updates icon tooltip with tooltip_text in Markup format """
+
         self.tray_icon.set_tooltip_markup(tooltip_text)
 
 
     def call_rest_window(self):
         """ Creates and calls rest window """
+
         self.rest_window.set_title("Meg")
         self.rest_window.set_size_request(260, 150)
         self.rest_window.set_position(gtk.WIN_POS_CENTER)
@@ -206,14 +233,17 @@ class GUI:
 
     def set_rest_window_timer(self, timer_text):
         """ Updates timer widget on rest window """
+
         self.time_label.set_text(timer_text)
 
     def destroy_rest_window(self, dummy=None):
         """ Kills rest window """
+
         self.rest_window.destroy()
 
     def main(self):
         """ Main circle, contains gtk.main() control """
+
         self.update_state()
         gtk.main()
 
