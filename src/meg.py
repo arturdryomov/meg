@@ -13,8 +13,6 @@ from time import time
 from os.path import dirname, join, realpath
 
 
-# TODO: Break to separate modules
-
 class Controller():
     """ Controls all classes and work process """
 
@@ -111,8 +109,7 @@ class Timer:
         """ Main initialization function for rest lengths and stuff """
 
         # For easy debugging and other planets
-        #self.minute_length = 60
-        self.minute_length = 5
+        self.minute_length = 60
 
         self.short_rest_length = self.minute_length * 0.5
         self.long_rest_length = self.minute_length * 3
