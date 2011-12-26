@@ -111,7 +111,8 @@ class Timer:
         """ Main initialization function for rest lengths and stuff """
 
         # For easy debugging and other planets
-        self.minute_length = 60
+        #self.minute_length = 60
+        self.minute_length = 5
 
         self.short_rest_length = self.minute_length * 0.5
         self.long_rest_length = self.minute_length * 3
@@ -146,14 +147,17 @@ class GUI:
         """ Initialization of the interface """
 
         self.state = "idle"
+
         self.tray_icon = gtk.StatusIcon()
-        self.rest_window = gtk.Window()
-        # Timer widget is here, because it's updating is external
-        self.time_label = gtk.Label()
         self.tray_icon.set_visible(True)
         # Signals connection
         self.tray_icon.connect("activate", self.update_state)
         self.tray_icon.connect("popup-menu", self.tray_icon_right_click)
+
+        self.rest_window = gtk.Window()
+
+        # Timer widget is here, because it's updating is external
+        self.time_label = gtk.Label()
 
     def update_state(self, dummy=None):
         """ Updates state of GUI inversionally """
@@ -172,6 +176,7 @@ class GUI:
     def tray_icon_right_click(self, data, event_button, event_time):
         """ Signal nandler for right click """
 
+        # Construct menu
         tray_icon_menu = gtk.Menu()
         close_menu_item = gtk.ImageMenuItem(gtk.STOCK_QUIT)
         close_menu_item.connect_object("activate",
@@ -190,10 +195,10 @@ class GUI:
     def call_rest_window(self):
         """ Creates and calls rest window """
 
-        # TODO: Set some way priority of window
         self.rest_window.set_title("Meg")
         self.rest_window.set_size_request(260, 150)
         self.rest_window.set_position(gtk.WIN_POS_CENTER)
+        self.rest_window.set_keep_above(True)
         self.rest_window.set_skip_pager_hint(True)
         self.rest_window.set_resizable(False)
         self.rest_window.set_icon_from_file(join(dirname(realpath(__file__)),
